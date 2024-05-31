@@ -1,0 +1,112 @@
+import pygame
+import math
+
+
+# снаряды
+class Projectile(pygame.sprite.Sprite):
+    def __init__(self, x, y, dmg, png: str, scale: float, facing=1, pierce=1, rotate=0, vel=10, spec='round'):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.png = png
+        self.dmg = dmg
+        self.rotate = rotate
+        self.facing = facing
+        self.pierce = pierce
+        self.vel = vel
+        self.spec = spec
+        self.scale = scale
+        self.rect = None
+
+    def upd(self, screen):
+        self.y = self.y - (self.vel*self.facing)
+        self.rect = screen.blit(self.prep_mask(), (self.x, self.y))
+
+    def prep_mask(self):
+        png = pygame.image.load(self.png)
+        if self.scale != 1:
+            png = pygame.transform.scale_by(png, factor=self.scale)
+        if self.rotate:
+            png = pygame.transform.rotate(png, angle=self.rotate)
+        # mask = pygame.mask.from_surface(png).to_surface()
+        return png
+
+    def hit(self, target):
+        target.get_damage(self.dmg)
+        self.pierce -= 1
+        self.vel /= 1.5
+        self.dmg /= 1.5
+
+
+# осколки
+class Shrapnel(Projectile):
+    def __init__(self, x, y, dmg, direct, size=3, spec='round', pierce=3, duration=20, vel=800):
+        super().__init__(x, y, dmg, direct, vel)
+        self.direct = direct
+        self.duration = duration
+        self.size = size
+        self.spec = spec
+        self.pierce = pierce
+
+    def upd(self, screen):
+        self.vel *= 1.1
+        # convert angle from degrees to radians
+        angle_radians = math.radians(self.direct)
+        # calculate movement in x and y directions
+        self.x += self.vel * math.cos(angle_radians)
+        self.y += -self.vel * math.sin(angle_radians)
+        self.rect = pygame.draw.circle(screen, (0, 0, 0, ), (self.x, self.y), self.size)
+
+
+# враги
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, x, y, w, h, color: tuple, hp=100, vel=1,):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.hp = hp
+        self.dmg_color = (225, 220, 220)
+        self.norm_color = color
+        self.color = color
+        self.w = w
+        self.h = h
+        self.vel = vel
+        self.rect = None
+
+    def get_damage(self, damage):
+        self.hp -= damage
+        self.color = self.dmg_color
+
+    def upd(self, screen):
+        # self.rect = pygame.Rect(self.x, self.y, self.radius)
+        self.y = self.y + self.vel
+        self.rect = pygame.draw.rect(screen, self.color, (self.x, self.y, self.w, self.h, ))
+        self.color = self.norm_color
+
+
+# игрок
+class Player(object):
+    def __init__(self, x, y, w, h, png: str, vel=5, ):
+        self.x = x
+        self.y = y
+        self.png = png
+        self.w = w
+        self.h = h
+        self.vel = vel
+        self.rect = None
+        self.loaded_png = pygame.image.load(self.png)
+        self.scaled_png = pygame.transform.scale(self.loaded_png, (w, h))
+
+    def move(self, x, y):
+        self.x += x
+        self.y += y
+
+
+    def upd(self, screen):
+        screen.blit(self.scaled_png, (self.x, self.y))
+        # print(f'player {self.x = }, {self.y = }')
+
+        # if not self.standing:
+        #     screen.blit(walkRight[0], (self.x, self.y))
+        # else:
+        #     screen.blit(walkLeft[0], (self.x, self.y))
