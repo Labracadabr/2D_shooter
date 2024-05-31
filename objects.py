@@ -19,6 +19,10 @@ class Projectile(pygame.sprite.Sprite):
         self.rect = None
 
     def upd(self, screen):
+        if self.spec == 'rocket':
+            self.vel *= 1.1
+        if self.spec == 'bomb':
+            self.vel *= 0.97
         self.y = self.y - (self.vel*self.facing)
         self.rect = screen.blit(self.prep_mask(), (self.x, self.y))
 

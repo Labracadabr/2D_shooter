@@ -25,6 +25,7 @@ enemy_hp_mult = 2
 player_png = 'pngs/turret_transparent.png'
 bullet_png = 'pngs/bullet.png'
 bomb_png = 'pngs/missile_orange.png'
+rocket_png = 'pngs/missile_red.png'
 
 # player
 player = Player(x=(SCREEN_SIZE[0] / 2), y=SCREEN_SIZE[1] - 120, png=player_png, w=60, h=140)
@@ -102,12 +103,13 @@ while run and health:
                 if enemy.rect.colliderect(proj.rect):
                     if proj.spec in ('nuke'):
                         x, y = proj.x, proj.y,
-                        shraps = [Shrapnel(x, y, direct=rndm(0, 360), dmg=100, vel=choice((1, 10)) * 100, duration=10,
-                                           spec='nuke') for _ in range(10)]
+                        shraps = [Shrapnel(x, y, direct=rndm(0, 360), dmg=100, vel=choice((1, 10)) * 100, duration=3,
+                                           spec='nuke') for _ in range(2)]
+                        projectiles.extend(shraps)
                     if proj.spec in ('rocket'):
                         x, y = proj.x, proj.y,
                         shraps = [Shrapnel(x, y, direct=rndm(0, 360), dmg=200, vel=choice((1, 10)) * 100, duration=10,
-                                           spec='nuke') for _ in range(30)]
+                                           spec='nuke') for _ in range(8)]
                         projectiles.extend(shraps)
                     if proj.spec in ('bomb',):
                         x, y = proj.x, proj.y,
@@ -141,8 +143,13 @@ while run and health:
 
     # bombs - only one bomb can be present at a time
     if bomb_fire and not any(filter(lambda b: b.spec == 'bomb', projectiles)):
-        bomb = Projectile(x, y, dmg=180, facing=1, png=bomb_png, vel=25, scale=0.1, rotate=225, spec='bomb')
+        bomb = Projectile(x, y, dmg=180, facing=1, png=bomb_png, vel=45, scale=0.1, rotate=225, spec='bomb')
         projectiles.append(bomb)
+
+    # rockets - only one rocket can be present at a time
+    if rocket_fire and not any(filter(lambda b: b.spec == 'rocket', projectiles)):
+        rocket = Projectile(x, y, dmg=180, facing=1, png=rocket_png, vel=15, scale=0.05, spec='rocket')
+        projectiles.append(rocket)
 
     # render projectiles
     for proj in projectiles:
