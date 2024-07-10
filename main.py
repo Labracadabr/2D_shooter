@@ -43,6 +43,22 @@ def draw_text(text, text_col, x, y):
     screen.blit(img, (x, y))
 
 
+# spawn bonus
+def spawn_bonus():
+    pass
+
+# spawn enemy
+def spawn_enemy():
+    enemy1 = Enemy(rndm(0, SCREEN_SIZE[0]), 0, w=22, h=20, color=GREEN, hp=100 * enemy_hp_mult)
+    if random() < 0.1:
+        enemy2 = Enemy(rndm(0, SCREEN_SIZE[0]), 0, w=50, h=45, color=GREY, vel=0.2, hp=3000 * enemy_hp_mult)
+    else:
+        enemy2 = Enemy(rndm(0, SCREEN_SIZE[0]), 0, w=15, h=28, color=YELLOW, vel=1.2, hp=60 * enemy_hp_mult)
+    enemy3 = Enemy(rndm(0, SCREEN_SIZE[0]), 0, w=40, h=35, color=BLUE, vel=0.4, hp=600 * enemy_hp_mult)
+    enemy4 = Enemy(rndm(0, SCREEN_SIZE[0]), 0, w=30, h=30, color=RED, vel=0.6, hp=150 * enemy_hp_mult)
+    enemies.append(choice((enemy1, enemy2, enemy3, enemy4)))
+
+
 run = True
 while run and health:
     level = 0.1 * (kills + 1) / 10
@@ -52,12 +68,6 @@ while run and health:
     # magic_color = (rndm(0, 255), rndm(0, 255), rndm(0, 255))
     clock.tick(30)
     screen.fill(BG)
-
-    # render stats
-    draw_text(text=f'Kills = {kills}', x=20, y=20, text_col=WHITE)
-    draw_text(text=f'Enemies = {len(enemies)}', x=20, y=40, text_col=WHITE)
-    draw_text(text=f'Health = {health}', x=20, y=60, text_col=WHITE)
-    draw_text(text=f'Level = {level}', x=20, y=80, text_col=WHITE)
 
     # input handling
     mouse = pygame.mouse.get_pos()
@@ -80,16 +90,7 @@ while run and health:
 
     # spawn new enemies
     if random() < level:
-        enemy1 = Enemy(rndm(0, SCREEN_SIZE[0]), 0, w=22, h=20, color=GREEN, hp=100 * enemy_hp_mult)
-
-        if random() < 0.1:
-            # tough enemy
-            enemy2 = Enemy(rndm(0, SCREEN_SIZE[0]), 0, w=50, h=45, color=GREY, vel=0.2, hp=3000 * enemy_hp_mult)
-        else:
-            enemy2 = Enemy(rndm(0, SCREEN_SIZE[0]), 0, w=15, h=28, color=YELLOW, vel=1.2, hp=60 * enemy_hp_mult)
-        enemy3 = Enemy(rndm(0, SCREEN_SIZE[0]), 0, w=40, h=35, color=BLUE, vel=0.4, hp=600 * enemy_hp_mult)
-        enemy4 = Enemy(rndm(0, SCREEN_SIZE[0]), 0, w=30, h=30, color=RED, vel=0.6, hp=150 * enemy_hp_mult)
-        enemies.append(choice((enemy1, enemy2, enemy3, enemy4)))
+        spawn_enemy()
 
     # render player at mouse x coord
     player.x = mouse[0] - 30
@@ -99,28 +100,28 @@ while run and health:
     for enemy in enemies:
         enemy.upd(screen)
         for proj in projectiles:
-            try:
-                if enemy.rect.colliderect(proj.rect):
-                    if proj.spec in ('nuke'):
-                        x, y = proj.x, proj.y,
-                        shraps = [Shrapnel(x, y, direct=rndm(0, 360), dmg=100, vel=choice((1, 10)) * 100, duration=3,
-                                           spec='nuke') for _ in range(2)]
-                        projectiles.extend(shraps)
-                    if proj.spec in ('rocket'):
-                        x, y = proj.x, proj.y,
-                        shraps = [Shrapnel(x, y, direct=rndm(0, 360), dmg=200, vel=choice((1, 10)) * 100, duration=10,
-                                           spec='nuke') for _ in range(8)]
-                        projectiles.extend(shraps)
-                    if proj.spec in ('bomb',):
-                        x, y = proj.x, proj.y,
-                        shraps = [Shrapnel(x, y, direct=rndm(0, 360), dmg=300, vel=choice((1, 10)) * 100, duration=15)
-                                  for _ in range(50)]
-                        projectiles.extend(shraps)
-                    proj.hit(target=enemy)
-                    if not proj.pierce:
-                        projectiles.remove(proj)
-            except Exception as e:
-                print('Error', e)
+
+            # projectile collides with enemy
+            if proj.rect and enemy.rect.colliderect(proj.rect):
+                if proj.spec in ('nuke'):
+                    x, y = proj.x, proj.y,
+                    shraps = [Shrapnel(x, y, direct=rndm(0, 360), dmg=100, vel=choice((1, 10)) * 100, duration=3,
+                                       spec='nuke') for _ in range(2)]
+                    projectiles.extend(shraps)
+                if proj.spec in ('rocket'):
+                    x, y = proj.x, proj.y,
+                    shraps = [Shrapnel(x, y, direct=rndm(0, 360), dmg=200, vel=choice((1, 10)) * 100, duration=10,
+                                       spec='nuke') for _ in range(8)]
+                    projectiles.extend(shraps)
+                if proj.spec in ('bomb',):
+                    x, y = proj.x, proj.y,
+                    shraps = [Shrapnel(x, y, direct=rndm(0, 360), dmg=300, vel=choice((1, 10)) * 100, duration=15)
+                              for _ in range(50)]
+                    projectiles.extend(shraps)
+
+                proj.hit(target=enemy)
+                if not proj.pierce:
+                    projectiles.remove(proj)
 
         # enemy killed
         if enemy.hp <= 0:
@@ -163,6 +164,13 @@ while run and health:
                     projectiles.remove(proj)
         except Exception as e:
             print(e)
+
+    # render stats
+    draw_text(text=f'Kills = {kills}', x=20, y=20, text_col=WHITE)
+    draw_text(text=f'Enemies = {len(enemies)}', x=20, y=40, text_col=WHITE)
+    draw_text(text=f'Health = {health}', x=20, y=60, text_col=WHITE)
+    draw_text(text=f'Difficulty = {round(level, 2)}', x=20, y=80, text_col=WHITE)
+    draw_text(text=f'FPS = {round(clock.get_fps(), 2)}', x=20, y=100, text_col=WHITE)
 
     pygame.display.flip()
 
