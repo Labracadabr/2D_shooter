@@ -2,6 +2,7 @@ from random import randint as rndm
 from random import random, choice
 import pygame
 from objects import Player, Projectile, Enemy, Shrapnel
+import shaders
 
 # colors
 RED = (255, 0, 0,)
@@ -49,13 +50,14 @@ def spawn_bonus():
 
 # spawn enemy
 def spawn_enemy():
-    enemy1 = Enemy(rndm(0, SCREEN_SIZE[0]), 0, w=22, h=20, color=GREEN, hp=100 * enemy_hp_mult)
+    x = rndm(spawn_border, SCREEN_SIZE[0]-spawn_border)
+    enemy1 = Enemy(x, 0, w=22, h=20, color=shaders.green(), hp=100 * enemy_hp_mult)
     if random() < 0.1:
-        enemy2 = Enemy(rndm(0, SCREEN_SIZE[0]), 0, w=50, h=45, color=GREY, vel=0.2, hp=3000 * enemy_hp_mult)
+        enemy2 = Enemy(x, 0, w=50, h=45, color=shaders.grey(), vel=0.2, hp=3000 * enemy_hp_mult)
     else:
-        enemy2 = Enemy(rndm(0, SCREEN_SIZE[0]), 0, w=15, h=28, color=YELLOW, vel=1.2, hp=60 * enemy_hp_mult)
-    enemy3 = Enemy(rndm(0, SCREEN_SIZE[0]), 0, w=40, h=35, color=BLUE, vel=0.4, hp=600 * enemy_hp_mult)
-    enemy4 = Enemy(rndm(0, SCREEN_SIZE[0]), 0, w=30, h=30, color=RED, vel=0.6, hp=150 * enemy_hp_mult)
+        enemy2 = Enemy(x, 0, w=15, h=28, color=shaders.yellow(), vel=1.2, hp=60 * enemy_hp_mult)
+    enemy3 = Enemy(x, 0, w=40, h=35, color=shaders.blue(), vel=0.4, hp=600 * enemy_hp_mult)
+    enemy4 = Enemy(x, 0, w=30, h=30, color=shaders.red(), vel=0.6, hp=150 * enemy_hp_mult)
     enemies.append(choice((enemy1, enemy2, enemy3, enemy4)))
 
 
@@ -105,19 +107,19 @@ while run and health:
             if proj.rect and enemy.rect.colliderect(proj.rect):
                 if proj.spec in ('nuke'):
                     x, y = proj.x, proj.y,
-                    shraps = [Shrapnel(x, y, direct=rndm(0, 360), dmg=100, vel=choice((1, 10)) * 100, duration=3,
-                                       spec='nuke') for _ in range(2)]
-                    projectiles.extend(shraps)
+                    sh = [Shrapnel(x, y, direct=rndm(0, 360), dmg=100, vel=choice((1, 10)) * 100, duration=3,
+                                   spec='nuke', rgb=shaders.orange()) for _ in range(2)]
+                    projectiles.extend(sh)
                 if proj.spec in ('rocket'):
                     x, y = proj.x, proj.y,
-                    shraps = [Shrapnel(x, y, direct=rndm(0, 360), dmg=200, vel=choice((1, 10)) * 100, duration=10,
-                                       spec='nuke') for _ in range(8)]
-                    projectiles.extend(shraps)
+                    sh = [Shrapnel(x, y, direct=rndm(0, 360), dmg=200, vel=choice((1, 10)) * 100, duration=10,
+                                   spec='nuke', rgb=shaders.dark_green()) for _ in range(8)]
+                    projectiles.extend(sh)
                 if proj.spec in ('bomb',):
                     x, y = proj.x, proj.y,
-                    shraps = [Shrapnel(x, y, direct=rndm(0, 360), dmg=300, vel=choice((1, 10)) * 100, duration=15)
-                              for _ in range(50)]
-                    projectiles.extend(shraps)
+                    sh = [Shrapnel(x, y, direct=rndm(0, 360), dmg=300, vel=choice((1, 10)) * 100, duration=15)
+                          for _ in range(50)]
+                    projectiles.extend(sh)
 
                 proj.hit(target=enemy)
                 if not proj.pierce:
