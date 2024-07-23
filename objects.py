@@ -1,3 +1,4 @@
+import random
 import pygame
 import math
 
@@ -87,6 +88,50 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = pygame.draw.rect(screen, self.color, (self.x, self.y, self.w, self.h, ))
         self.color = self.norm_color
 
+    def create_debris(self) -> list:
+        debris = []
+        brighter_color = tuple(min(255, i+30) for i in self.norm_color)
+        # print(f'{self.norm_color = }')
+        # print(f'{brighter_color = }')
+        for _ in range(7):
+            direction = random.randint(0, 360)
+            velocity = random.randint(10, 70)
+            debry = Debris(self.x, self.y,
+                           polygon=PolyGenerator.random_polygon(num_points=10, scale=self.w / 2),
+                           color=brighter_color,
+                           direct=direction,
+                           vel=velocity,
+                           duration=7, )
+            debris.append(debry)
+
+        return debris
+
+class Debris(pygame.sprite.Sprite):
+    def __init__(self, x, y, polygon, color, direct, vel, duration, ):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.polygon = polygon
+        self.color = color
+        self.duration = duration
+        self.direct = direct
+        self.vel = vel
+        self.rect = None
+
+    def upd(self, screen):
+        self.vel *= 0.7
+        # convert angle from degrees to radians
+        angle_radians = math.radians(self.direct)
+
+        # calculate movement in x and y directions
+        self.x += self.vel * math.cos(angle_radians)
+        self.y += -self.vel * math.sin(angle_radians)
+        shift_polygon = []
+        for point in self.polygon:
+            shift_polygon.append(((point[0]+self.x), (point[1]+self.y)))
+
+        self.rect = pygame.draw.polygon(screen, color=self.color, points=shift_polygon)
+    def __init__(self, x, y, w, h, color: tuple, hp=100, vel=1,):
 
 # игрок
 class Player(object):

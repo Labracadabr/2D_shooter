@@ -99,7 +99,7 @@ while run and health:
     player.upd(screen)
 
     # check & render enemies
-    for enemy in enemies:
+    for enemy in enemies[::-1]:
         enemy.upd(screen)
         for proj in projectiles:
 
@@ -129,10 +129,19 @@ while run and health:
         if enemy.hp <= 0:
             kills += 1
             enemies.remove(enemy)
+            # debris
+            debris.extend(enemy.create_debris())
         # enemy touch base - minus 1 player hp
         if enemy.y >= SCREEN_SIZE[1]:
             health -= 1
             enemies.remove(enemy)
+
+    # render debris
+    for deb in debris:
+        deb.upd(screen)
+        deb.duration -= 1
+        if deb.duration < 1:
+            debris.remove(deb)
 
     # new projectile coordinates
     x, y = player.x + 20, player.y + 30
