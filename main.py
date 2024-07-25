@@ -97,6 +97,15 @@ def spawn_enemy():
     enemy4 = Enemy(x, 0, w=30, h=30, color=shaders.red(), vel=0.6 * speed_mult, hp=150 * enemy_hp_mult)
     enemies.append(choice((enemy1, enemy2, enemy3, enemy4)))
 
+def lowest_enemy_coord(enemies_list: list[Enemy]) -> tuple | None:
+    enemies_list.sort(key=lambda enm: enm.y)
+    lowest = enemies_list[-1]
+
+    # center coords
+    x, y = lowest.rect.center[0], lowest.rect.center[1]
+    print(f'lowest_enemy x{x} y{y}')
+    return x, y
+
 
 fire_sprites = load_sprites(fire_png, grid=(3, 3), size=(60, 100), rotate=270)
 explosion_sprites = load_sprites(explosion_png, (8, 6), size=(60, 80))
