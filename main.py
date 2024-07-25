@@ -104,13 +104,19 @@ explosion_sprites = load_sprites(explosion_png, (8, 6), size=(60, 80))
 
 run = True
 while run and health:
+    clock.tick(30)
+    screen.fill(BG)
+
+    # increasing difficulty
     level = 0.1 * (kills + 1) / 10
+    speed_mult = 1 + level / 10
+    spawn_border = max(0, int(spawn_border_init / speed_mult))
+
+    # switches
     gun_fire = False
     bomb_fire = False
     rocket_fire = False
     # magic_color = (rndm(0, 255), rndm(0, 255), rndm(0, 255))
-    clock.tick(30)
-    screen.fill(BG)
 
     # input handling
     mouse = pygame.mouse.get_pos()
@@ -131,8 +137,8 @@ while run and health:
         if event.type == pygame.QUIT:
             run = False
 
-    # spawn new enemies
-    if random() < level:
+    # spawn new enemies probability
+    if random() < level + 0.5:
         spawn_enemy()
 
     # render player at mouse x coord
@@ -223,8 +229,12 @@ while run and health:
     draw_text(text=f'Health = {health}', x=20, y=60, text_col=WHITE)
     draw_text(text=f'Difficulty = {round(level, 2)}', x=20, y=80, text_col=WHITE)
     draw_text(text=f'FPS = {round(clock.get_fps(), 2)}', x=20, y=100, text_col=WHITE)
+    draw_text(text=f'Projectiles = {len(projectiles)}', x=20, y=120, text_col=WHITE)
+    draw_text(text=f'Speed = {round(speed_mult, 2)}', x=20, y=140, text_col=WHITE)
+    draw_text(text=f'Spawn border = {round(spawn_border, 1)}', x=20, y=160, text_col=WHITE)
 
     pygame.display.flip()
 
 pygame.quit()
-exit('\nGame over')
+print(f'\n{kills = }')
+exit('Game over')
