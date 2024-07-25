@@ -1,5 +1,4 @@
-from random import randint as rndm
-from random import random, choice
+from random import random, randint, choice
 import pygame
 from objects import Player, Projectile, Enemy, Shrapnel
 import shaders
@@ -18,7 +17,7 @@ BG = (40, 30, 30,)
 pygame.init()
 SCREEN_SIZE = (1200, 800)
 screen = pygame.display.set_mode(SCREEN_SIZE)
-text_font = pygame.font.SysFont('Arial', 25)
+text_font = pygame.font.SysFont('Arial', 18)
 clock = pygame.time.Clock()
 enemy_hp_mult = 4
 MAX_BOMBS = 1
@@ -88,7 +87,7 @@ def spawn_bonus():
 
 # spawn enemy
 def spawn_enemy():
-    x = rndm(spawn_border, SCREEN_SIZE[0]-spawn_border)
+    x = randint(spawn_border, SCREEN_SIZE[0]-spawn_border)
     enemy1 = Enemy(x, 0, w=22, h=20, color=shaders.green(), vel=0.2 * speed_mult, hp=100 * enemy_hp_mult)
     if random() < 0.1:
         enemy2 = Enemy(x, 0, w=50, h=45, color=shaders.grey(), vel=0.2 * speed_mult, hp=3000 * enemy_hp_mult)
@@ -154,16 +153,16 @@ while run and health:
             if proj.rect and enemy.rect.colliderect(proj.rect):
                 x, y = proj.x, proj.y,
                 if proj.spec in ('nuke'):
-                    sh = [Shrapnel(x, y, direct=rndm(0, 360), dmg=100, vel=choice((1, 10)) * 100, duration=3,
+                    sh = [Shrapnel(x, y, direct=randint(0, 360), dmg=100, vel=choice((1, 10)) * 100, duration=3,
                                    spec='nuke', rgb=shaders.orange()) for _ in range(2)]
                     projectiles.extend(sh)
                 if proj.spec in ('rocket'):
-                    sh = [Shrapnel(x, y, direct=rndm(0, 360), dmg=200, vel=choice((1, 10)) * 100, duration=10,
+                    sh = [Shrapnel(x, y, direct=randint(0, 360), dmg=200, vel=choice((1, 10)) * 100, duration=10,
                                    spec='nuke', rgb=shaders.dark_green()) for _ in range(8)]
                     projectiles.extend(sh)
                 if proj.spec in ('bomb',):
-                    sh = [Shrapnel(x, y, direct=rndm(0, 360), dmg=300, vel=choice((1, 10)) * 100, duration=15)
-                          for _ in range(50)]
+                    sh = [Shrapnel(x, y, direct=randint(0, 360), dmg=300, vel=choice((1, 10)) * 100, duration=15)
+                          for _ in range(500)]
                     projectiles.extend(sh)
 
                 proj.hit(target=enemy)
@@ -194,8 +193,8 @@ while run and health:
 
     # bullets
     if gun_fire:
-        rounds = [Projectile(rndm(x - spread, x + spread), y, dmg=rndm(40, 50), pierce=5,
-                  png=bullet_png, vel=rndm(50, 70), scale=0.18) for _ in range(8)]
+        rounds = [Projectile(randint(x - spread, x + spread), y, dmg=randint(40, 50), pierce=5,
+                  png=bullet_png, vel=randint(50, 70), scale=0.18) for _ in range(8)]
         projectiles.extend(rounds)
         # gun fire animation
         screen.blit(choice(fire_sprites), (x-28, y-120))
@@ -215,13 +214,15 @@ while run and health:
         # out of screen
         if proj.y < 0:
             projectiles.remove(proj)
-        try:
-            if isinstance(proj, Shrapnel):
-                proj.duration -= 1
-                if not proj.duration:
-                    projectiles.remove(proj)
-        except Exception as e:
-            print(e)
+            continue
+
+        # debris - out of lifetime
+        if hasattr(proj, 'duration'):
+            proj.duration -= 1
+            if not proj.duration:
+                projectiles.remove(proj)
+                continue
+        proj.upd(screen)
 
     # render stats
     draw_text(text=f'Kills = {kills}', x=20, y=20, text_col=WHITE)
