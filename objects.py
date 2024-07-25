@@ -1,4 +1,5 @@
 import random
+from polygon_generator import PolyGenerator
 import pygame
 import math
 
