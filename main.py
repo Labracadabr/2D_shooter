@@ -37,11 +37,43 @@ spread = 12  # bullets fire spread
 # lists of entities to render
 projectiles = []
 enemies = []
+debris = []
 
 # render text
 def draw_text(text, text_col, x, y):
     img = text_font.render(text, True, text_col)
     screen.blit(img, (x, y))
+
+
+def load_sprites(sprite_path, grid: tuple, size: tuple, rotate=0) -> list[pygame.surface.Surface]:
+    """
+    :param sprite_path: file path
+    :type grid: grid of sprite images, example grid=(8, 6)
+    :param size: size to transform sprite to
+    :param rotate: direction to rotate in degrees
+    """
+    # Load the sprite sheet
+    sprite_sheet = pygame.image.load(sprite_path)
+    sprite_surfaces = []
+
+    # Get the dimensions of each sprite
+    sprite_w = sprite_sheet.get_width() // grid[0]
+    sprite_h = sprite_sheet.get_height() // grid[1]
+
+    # Loop through each row and column
+    for col in range(grid[0]):
+        for row in range(grid[1]):
+            # Calculate the x and y position of the current sprite
+            x = col * sprite_w
+            y = row * sprite_h
+
+            # Create a rectangle for the current sprite
+            surface = sprite_sheet.subsurface(pygame.Rect(x, y, sprite_w, sprite_h))
+            if rotate:
+                surface = pygame.transform.rotate(surface, angle=rotate)
+            sprite_surfaces.append(pygame.transform.scale(surface, size))
+
+    return sprite_surfaces
 
 
 # spawn bonus
