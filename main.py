@@ -27,6 +27,8 @@ player_png = 'pngs/turret_transparent.png'
 bullet_png = 'pngs/bullet.png'
 bomb_png = 'pngs/missile_orange.png'
 rocket_png = 'pngs/missile_red.png'
+fire_png = 'pngs/gunfire.png'
+explosion_png = 'pngs/explosions-transparent.png'
 
 # player
 player = Player(x=(SCREEN_SIZE[0] / 2), y=SCREEN_SIZE[1] - 120, png=player_png, w=60, h=140)
@@ -92,6 +94,9 @@ def spawn_enemy():
     enemy4 = Enemy(x, 0, w=30, h=30, color=shaders.red(), vel=0.6, hp=150 * enemy_hp_mult)
     enemies.append(choice((enemy1, enemy2, enemy3, enemy4)))
 
+
+fire_sprites = load_sprites(fire_png, grid=(3, 3), size=(60, 100), rotate=270)
+explosion_sprites = load_sprites(explosion_png, (8, 6), size=(60, 80))
 
 run = True
 while run and health:
@@ -184,6 +189,8 @@ while run and health:
         rounds = [Projectile(x, y, dmg=rndm(40, 50), facing=1, pierce=5, png=bullet_png, vel=rndm(50, 70), scale=0.18)
                   for _ in range(8)]
         projectiles.extend(rounds)
+        # gun fire animation
+        screen.blit(choice(fire_sprites), (x-28, y-120))
 
     # bombs - only one bomb can be present at a time
     if bomb_fire and not any(filter(lambda b: b.spec == 'bomb', projectiles)):
