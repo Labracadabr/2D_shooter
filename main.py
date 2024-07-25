@@ -20,7 +20,11 @@ SCREEN_SIZE = (1200, 800)
 screen = pygame.display.set_mode(SCREEN_SIZE)
 text_font = pygame.font.SysFont('Arial', 25)
 clock = pygame.time.Clock()
-enemy_hp_mult = 2
+enemy_hp_mult = 4
+MAX_BOMBS = 1
+spawn_border_init = 500
+spawn_border = 0
+speed_mult = 1
 
 # entities png
 player_png = 'pngs/turret_transparent.png'
@@ -34,7 +38,7 @@ explosion_png = 'pngs/explosions-transparent.png'
 player = Player(x=(SCREEN_SIZE[0] / 2), y=SCREEN_SIZE[1] - 120, png=player_png, w=60, h=140)
 kills = 0
 health = 3
-spread = 12  # bullets fire spread
+spread = 8  # bullets fire spread
 
 # lists of entities to render
 projectiles = []
@@ -85,13 +89,13 @@ def spawn_bonus():
 # spawn enemy
 def spawn_enemy():
     x = rndm(spawn_border, SCREEN_SIZE[0]-spawn_border)
-    enemy1 = Enemy(x, 0, w=22, h=20, color=shaders.green(), hp=100 * enemy_hp_mult)
+    enemy1 = Enemy(x, 0, w=22, h=20, color=shaders.green(), vel=0.2 * speed_mult, hp=100 * enemy_hp_mult)
     if random() < 0.1:
-        enemy2 = Enemy(x, 0, w=50, h=45, color=shaders.grey(), vel=0.2, hp=3000 * enemy_hp_mult)
+        enemy2 = Enemy(x, 0, w=50, h=45, color=shaders.grey(), vel=0.2 * speed_mult, hp=3000 * enemy_hp_mult)
     else:
-        enemy2 = Enemy(x, 0, w=15, h=28, color=shaders.yellow(), vel=1.2, hp=60 * enemy_hp_mult)
-    enemy3 = Enemy(x, 0, w=40, h=35, color=shaders.blue(), vel=0.4, hp=600 * enemy_hp_mult)
-    enemy4 = Enemy(x, 0, w=30, h=30, color=shaders.red(), vel=0.6, hp=150 * enemy_hp_mult)
+        enemy2 = Enemy(x, 0, w=15, h=28, color=shaders.yellow(), vel=1.2 * speed_mult, hp=60 * enemy_hp_mult)
+    enemy3 = Enemy(x, 0, w=40, h=35, color=shaders.blue(), vel=0.4 * speed_mult, hp=600 * enemy_hp_mult)
+    enemy4 = Enemy(x, 0, w=30, h=30, color=shaders.red(), vel=0.6 * speed_mult, hp=150 * enemy_hp_mult)
     enemies.append(choice((enemy1, enemy2, enemy3, enemy4)))
 
 
@@ -142,18 +146,16 @@ while run and health:
 
             # projectile collides with enemy
             if proj.rect and enemy.rect.colliderect(proj.rect):
+                x, y = proj.x, proj.y,
                 if proj.spec in ('nuke'):
-                    x, y = proj.x, proj.y,
                     sh = [Shrapnel(x, y, direct=rndm(0, 360), dmg=100, vel=choice((1, 10)) * 100, duration=3,
                                    spec='nuke', rgb=shaders.orange()) for _ in range(2)]
                     projectiles.extend(sh)
                 if proj.spec in ('rocket'):
-                    x, y = proj.x, proj.y,
                     sh = [Shrapnel(x, y, direct=rndm(0, 360), dmg=200, vel=choice((1, 10)) * 100, duration=10,
                                    spec='nuke', rgb=shaders.dark_green()) for _ in range(8)]
                     projectiles.extend(sh)
                 if proj.spec in ('bomb',):
-                    x, y = proj.x, proj.y,
                     sh = [Shrapnel(x, y, direct=rndm(0, 360), dmg=300, vel=choice((1, 10)) * 100, duration=15)
                           for _ in range(50)]
                     projectiles.extend(sh)
@@ -182,29 +184,29 @@ while run and health:
 
     # new projectile coordinates
     x, y = player.x + 20, player.y + 30
-    x = rndm(x - spread, x + spread)
+    # x = rndm(x - spread, x + spread)
 
     # bullets
     if gun_fire:
-        rounds = [Projectile(x, y, dmg=rndm(40, 50), facing=1, pierce=5, png=bullet_png, vel=rndm(50, 70), scale=0.18)
-                  for _ in range(8)]
+        rounds = [Projectile(rndm(x - spread, x + spread), y, dmg=rndm(40, 50), pierce=5,
+                  png=bullet_png, vel=rndm(50, 70), scale=0.18) for _ in range(8)]
         projectiles.extend(rounds)
         # gun fire animation
         screen.blit(choice(fire_sprites), (x-28, y-120))
 
-    # bombs - only one bomb can be present at a time
-    if bomb_fire and not any(filter(lambda b: b.spec == 'bomb', projectiles)):
-        bomb = Projectile(x, y, dmg=180, facing=1, png=bomb_png, vel=45, scale=0.1, rotate=225, spec='bomb')
+    # bombs - only MAX_BOMBS bombs can be present at a time
+    if bomb_fire and len(tuple(filter(lambda b: b.spec == 'bomb', projectiles))) < MAX_BOMBS:
+        bomb = Projectile(x, y, dmg=180, png=bomb_png, vel=45, scale=0.1, rotate=225, spec='bomb')
         projectiles.append(bomb)
 
     # rockets - only one rocket can be present at a time
     if rocket_fire and not any(filter(lambda b: b.spec == 'rocket', projectiles)):
-        rocket = Projectile(x, y, dmg=180, facing=1, png=rocket_png, vel=15, scale=0.05, spec='rocket')
+        rocket = Projectile(x, y, dmg=180, png=rocket_png, vel=15, scale=0.05, spec='rocket')
         projectiles.append(rocket)
 
     # render projectiles
     for proj in projectiles:
-        proj.upd(screen)
+        # out of screen
         if proj.y < 0:
             projectiles.remove(proj)
         try:
