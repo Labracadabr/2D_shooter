@@ -21,7 +21,7 @@ text_font = pygame.font.SysFont('Arial', 18)
 clock = pygame.time.Clock()
 enemy_hp_mult = 4
 MAX_BOMBS = 1
-spawn_border_init = 500
+spawn_border_init = int(SCREEN_SIZE[0]/3)
 spawn_border = 0
 speed_mult = 1
 
@@ -107,6 +107,16 @@ def lowest_enemy_coord(enemies_list: list[Enemy]) -> tuple | None:
     return x, y
 
 
+def crosshair(coords: tuple[float, float]):
+    x, y = coords
+    size = 8
+
+    # line 1
+    pygame.draw.line(screen, BLACK, (x+size, y+size), (x-size, y-size), width=4)
+    # line 2
+    pygame.draw.line(screen, BLACK, (x-size, y+size), (x+size, y-size), width=4)
+
+
 fire_sprites = load_sprites(fire_png, grid=(3, 3), size=(60, 100), rotate=270)
 explosion_sprites = load_sprites(explosion_png, (8, 6), size=(60, 80))
 
@@ -118,7 +128,7 @@ while run and health:
     # increasing difficulty
     level = 0.1 * (kills + 1) / 10
     speed_mult = 1 + level / 10
-    spawn_border = max(0, int(spawn_border_init / speed_mult))
+    spawn_border = max(10, int(spawn_border_init / speed_mult))
 
     # switches
     gun_fire = False
