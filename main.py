@@ -24,6 +24,9 @@ MAX_BOMBS = 1
 spawn_border_init = int(SCREEN_SIZE[0]/3)
 spawn_border = 0
 speed_mult = 1
+robot = False
+cv = False
+hand_x, hand_y = 0, 0
 
 # entities png
 player_png = 'pngs/turret_transparent.png'
@@ -103,7 +106,6 @@ def lowest_enemy_coord(enemies_list: list[Enemy]) -> tuple | None:
 
     # center coords
     x, y = lowest.rect.center[0], lowest.rect.center[1]
-    print(f'lowest_enemy x{x} y{y}')
     return x, y
 
 
@@ -142,6 +144,8 @@ while run and health:
     key = pygame.key.get_pressed()
 
     # handle mouse keys
+    if robot:
+        gun_fire = bomb_fire = True
     if m_key[0]:
         gun_fire = True
     if m_key[2]:
@@ -158,10 +162,6 @@ while run and health:
     # spawn new enemies probability
     if random() < level + 0.5:
         spawn_enemy()
-
-    # render player at mouse x coord
-    player.x = mouse[0] - 30
-    player.upd(screen)
 
     # check & render enemies
     for enemy in enemies[::-1]:
@@ -205,6 +205,19 @@ while run and health:
         deb.duration -= 1
         if deb.duration < 1:
             debris.remove(deb)
+
+    # move player to lowest enemy x coord
+    if robot and enemies:
+        x, y = lowest_enemy_coord(enemies)
+        # mark the lowest enemy
+        crosshair((x, y))
+        player.x = x - 30
+
+    # move to mouse x coord
+    else:
+        player.x = mouse[0] - 30
+        hand_x, hand_y = 0, 0
+    player.upd(screen)
 
     # new projectile coordinates
     x, y = player.x + 20, player.y + 30
@@ -252,6 +265,9 @@ while run and health:
     draw_text(text=f'Projectiles = {len(projectiles)}', x=20, y=120, text_col=WHITE)
     draw_text(text=f'Speed = {round(speed_mult, 2)}', x=20, y=140, text_col=WHITE)
     draw_text(text=f'Spawn border = {round(spawn_border, 1)}', x=20, y=160, text_col=WHITE)
+    draw_text(text=f'{robot = }', x=20, y=180, text_col=WHITE)
+    draw_text(text=f'CV {cv}', x=20, y=200, text_col=WHITE)
+    draw_text(text=f'{hand_x, hand_y = }', x=20, y=220, text_col=WHITE)
 
     pygame.display.flip()
 
