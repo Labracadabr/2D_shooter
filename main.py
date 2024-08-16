@@ -140,6 +140,7 @@ fire_sprites = load_sprites(fire_png, grid=(3, 3), size=(60, 100), rotate=270)
 explosion_sprites = load_sprites(explosion_png, (8, 6), size=(60, 80))
 
 run = True
+print(f'{run, health = }')
 cv_frame = False
 while run and health:
     clock.tick(30)
@@ -309,6 +310,11 @@ while run and health:
     draw_text(text=f'{robot = }', x=20, y=180, text_col=WHITE)
     draw_text(text=f'CV = {cv}', x=20, y=200, text_col=WHITE)
     draw_text(text=f'{hand_x, hand_y = }', x=20, y=220, text_col=WHITE)
+
+    # show tips
+    if kills < 100:
+        tips = 'left mouse for gun, right mouse for bombs, mid mouse for nuke, space for aim-bot'
+        draw_text(text=tips, x=20, y=SCREEN_SIZE[1]-40, text_col=GREY)
 
     pygame.display.flip()
 
