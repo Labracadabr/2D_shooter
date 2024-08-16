@@ -3,6 +3,13 @@ import pygame
 from objects import Player, Projectile, Enemy, Shrapnel
 import shaders
 
+# for cv controller (requires webcam and gpu):
+# 1. install cuda & pytorch; 2. run pip install ultralyticsplus, cv2; 3. uncomment following lines; 4. press C in game
+# import ultralyticsplus
+# import cv2
+# model = ultralyticsplus.YOLO('lewiswatson/yolov8x-tuned-hand-gestures')
+# video = cv2.VideoCapture(0)
+
 # colors
 RED = (255, 0, 0,)
 GREEN = (0, 255, 0,)
@@ -118,11 +125,22 @@ def crosshair(coords: tuple[float, float]):
     # line 2
     pygame.draw.line(screen, BLACK, (x-size, y+size), (x+size, y-size), width=4)
 
+def rel_centre(x1, y1, x2, y2) -> tuple:
+    # Calculate the center of the bounding box
+    center_x = (x1 + x2) / 2
+    center_y = (y1 + y2) / 2
+
+    # Calculate the relative coordinates
+    rel_center_x = center_x / frame.shape[1]
+    rel_center_y = center_y / frame.shape[0]
+    return round(rel_center_x, 4), round(rel_center_y, 4)
+
 
 fire_sprites = load_sprites(fire_png, grid=(3, 3), size=(60, 100), rotate=270)
 explosion_sprites = load_sprites(explosion_png, (8, 6), size=(60, 80))
 
 run = True
+cv_frame = False
 while run and health:
     clock.tick(30)
     screen.fill(BG)
@@ -144,7 +162,7 @@ while run and health:
     key = pygame.key.get_pressed()
 
     # handle mouse keys
-    if robot:
+    if robot or cv:
         gun_fire = bomb_fire = True
     if m_key[0]:
         gun_fire = True
@@ -158,6 +176,11 @@ while run and health:
         # close button - quit game
         if event.type == pygame.QUIT:
             run = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                robot = not robot
+            if event.key == pygame.K_c:
+                cv = not cv
 
     # spawn new enemies probability
     if random() < level + 0.5:
@@ -206,12 +229,30 @@ while run and health:
         if deb.duration < 1:
             debris.remove(deb)
 
-    # move player to lowest enemy x coord
+    # move player to the lowest enemy x coord
     if robot and enemies:
         x, y = lowest_enemy_coord(enemies)
         # mark the lowest enemy
         crosshair((x, y))
         player.x = x - 30
+
+    # CV controller
+    elif cv:
+        cv_frame = not cv_frame
+        if cv_frame:
+            # read webcam
+            _, frame = video.read()
+            # perform inference
+            results = model.predict(frame)
+            # put bbox
+            for result in results:
+                for box in result.boxes:
+                    bbox = box.xyxy.tolist()[0]
+                    hand_x, hand_y = rel_centre(*bbox)
+                    # conf = box.conf.item()
+                    player.x = int((SCREEN_SIZE[0] - SCREEN_SIZE[0] * hand_x) - 30)
+                    break
+                break
 
     # move to mouse x coord
     else:
@@ -266,7 +307,7 @@ while run and health:
     draw_text(text=f'Speed = {round(speed_mult, 2)}', x=20, y=140, text_col=WHITE)
     draw_text(text=f'Spawn border = {round(spawn_border, 1)}', x=20, y=160, text_col=WHITE)
     draw_text(text=f'{robot = }', x=20, y=180, text_col=WHITE)
-    draw_text(text=f'CV {cv}', x=20, y=200, text_col=WHITE)
+    draw_text(text=f'CV = {cv}', x=20, y=200, text_col=WHITE)
     draw_text(text=f'{hand_x, hand_y = }', x=20, y=220, text_col=WHITE)
 
     pygame.display.flip()
