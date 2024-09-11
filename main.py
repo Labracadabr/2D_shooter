@@ -1,7 +1,8 @@
 from random import random, randint, choice
 import pygame
-from objects import Player, Projectile, Enemy, Shrapnel
+from objects import Player, Projectile, Enemy, Shrapnel, Boss
 import shaders
+from objects import SCREEN_SIZE
 
 # for cv controller (requires webcam and gpu):
 # 1. install cuda & pytorch; 2. run pip install ultralyticsplus, cv2; 3. uncomment following lines; 4. press C in game
@@ -22,7 +23,6 @@ BG = (40, 30, 30,)
 
 # initialize
 pygame.init()
-SCREEN_SIZE = (1200, 800)
 screen = pygame.display.set_mode(SCREEN_SIZE)
 text_font = pygame.font.SysFont('Arial', 18)
 clock = pygame.time.Clock()
@@ -33,6 +33,7 @@ spawn_border = 0
 speed_mult = 1
 robot = False
 cv = False
+radial = False
 hand_x, hand_y = 0, 0
 
 # entities png
@@ -44,7 +45,7 @@ fire_png = 'pngs/gunfire.png'
 explosion_png = 'pngs/explosions-transparent.png'
 
 # player
-player = Player(x=(SCREEN_SIZE[0] / 2), y=SCREEN_SIZE[1] - 120, png=player_png, w=60, h=140)
+player = Player(x=(SCREEN_SIZE[0] / 2), y=SCREEN_SIZE[1] - 120, png=player_png, w=60, h=140, angle=0, radial=False)
 kills = 0
 health = 3
 spread = 8  # bullets fire spread
@@ -182,6 +183,8 @@ while run and health:
                 robot = not robot
             if event.key == pygame.K_c:
                 cv = not cv
+            if event.key == pygame.K_r:
+                radial = not radial
 
     # spawn new enemies probability
     if random() < level + 0.5:
@@ -257,30 +260,36 @@ while run and health:
 
     # move to mouse x coord
     else:
-        player.x = mouse[0] - 30
+        if radial:
+            pass
+            angle = player.target_angle(mouse)
+        else:
+            player.x = mouse[0] - 30
+            angle = 90
         hand_x, hand_y = 0, 0
     player.upd(screen)
 
     # new projectile coordinates
+    # x, y = player.x, player.y
     x, y = player.x + 20, player.y + 30
     # x = rndm(x - spread, x + spread)
 
     # bullets
     if gun_fire:
         rounds = [Projectile(randint(x - spread, x + spread), y, dmg=randint(40, 50), pierce=5,
-                  png=bullet_png, vel=randint(50, 70), scale=0.18) for _ in range(8)]
+                  png=bullet_png, vel=randint(50, 70), scale=0.18, angle=angle, rotate=-angle+90) for _ in range(8)]
         projectiles.extend(rounds)
         # gun fire animation
         screen.blit(choice(fire_sprites), (x-28, y-120))
 
     # bombs - only MAX_BOMBS bombs can be present at a time
     if bomb_fire and len(tuple(filter(lambda b: b.spec == 'bomb', projectiles))) < MAX_BOMBS:
-        bomb = Projectile(x, y, dmg=180, png=bomb_png, vel=45, scale=0.1, rotate=225, spec='bomb')
+        bomb = Projectile(x, y, dmg=180, png=bomb_png, vel=45, scale=0.1, rotate=225-angle+90, spec='bomb', angle=angle)
         projectiles.append(bomb)
 
     # rockets - only one rocket can be present at a time
     if rocket_fire and not any(filter(lambda b: b.spec == 'rocket', projectiles)):
-        rocket = Projectile(x, y, dmg=180, png=rocket_png, vel=15, scale=0.05, spec='rocket')
+        rocket = Projectile(x, y, dmg=180, png=rocket_png, vel=15, scale=0.05, spec='rocket', angle=-angle+90)
         projectiles.append(rocket)
 
     # render projectiles
@@ -310,6 +319,7 @@ while run and health:
     draw_text(text=f'{robot = }', x=20, y=180, text_col=WHITE)
     draw_text(text=f'CV = {cv}', x=20, y=200, text_col=WHITE)
     draw_text(text=f'{hand_x, hand_y = }', x=20, y=220, text_col=WHITE)
+    draw_text(text=f'degrees = {player.target_angle(mouse)}', x=20, y=240, text_col=WHITE)
 
     # show tips
     if kills < 100:

@@ -4,17 +4,18 @@ import math
 import pygame
 
 from polygon_generator import PolyGenerator
+SCREEN_SIZE = (1200, 660)
 
 # снаряды
 class Projectile(pygame.sprite.Sprite):
-    def __init__(self, x, y, dmg, png: str, scale: float, facing=1, pierce=1, rotate=0, vel=10, spec='round'):
+    def __init__(self, x, y, dmg, png: str, scale: float, angle=1, pierce=1, rotate=0, vel=10, spec='round'):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
         self.png = png
         self.dmg = dmg
         self.rotate = rotate
-        self.facing = facing
+        self.angle = angle
         self.pierce = pierce
         self.vel = vel
         self.spec = spec
@@ -26,7 +27,15 @@ class Projectile(pygame.sprite.Sprite):
             self.vel *= 1.1
         if self.spec == 'bomb':
             self.vel *= 0.97
-        self.y = self.y - (self.vel*self.facing)
+
+        # convert angle from degrees to radians
+        angle_radians = math.radians(self.angle)
+
+        # calculate movement in x and y directions
+        self.x -= self.vel * math.cos(angle_radians)
+        self.y -= self.vel * math.sin(angle_radians)
+
+        # self.y = self.y - (self.vel*self.angle)
         self.rect = screen.blit(self.prep_mask(), (self.x, self.y))
 
     def prep_mask(self):
@@ -85,17 +94,14 @@ class Enemy(pygame.sprite.Sprite):
         self.color = self.dmg_color
 
     def upd(self, screen):
-        # self.rect = pygame.Rect(self.x, self.y, self.radius)
         self.y = self.y + self.vel
-        self.rect = pygame.draw.rect(screen, self.color, (self.x, self.y, self.w, self.h, ))
+        self.rect = pygame.draw.ellipse(screen, self.color, (self.x, self.y, self.w, self.h, ))
         self.color = self.norm_color
 
     def create_debris(self) -> list:
         debris = []
         brighter_color = tuple(min(255, i+30) for i in self.norm_color)
-        # print(f'{self.norm_color = }')
-        # print(f'{brighter_color = }')
-        for _ in range(7):
+        for _ in range(random.randint(4, 6)):
             direction = random.randint(0, 360)
             velocity = random.randint(10, 70)
             debry = Debris(self.x, self.y,
@@ -133,13 +139,15 @@ class Debris(pygame.sprite.Sprite):
             shift_polygon.append(((point[0]+self.x), (point[1]+self.y)))
 
         self.rect = pygame.draw.polygon(screen, color=self.color, points=shift_polygon)
-    def __init__(self, x, y, w, h, color: tuple, hp=100, vel=1,):
+
 
 # игрок
-class Player(object):
-    def __init__(self, x, y, w, h, png: str, vel=5, ):
+class Player:
+    def __init__(self, x, y, w, h, angle: int, radial: bool, png: str, vel=5):
         self.x = x
         self.y = y
+        self.angle = angle
+        self.radial = radial
         self.png = png
         self.w = w
         self.h = h
