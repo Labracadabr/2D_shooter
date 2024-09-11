@@ -1,8 +1,9 @@
 import random
-from polygon_generator import PolyGenerator
-import pygame
 import math
 
+import pygame
+
+from polygon_generator import PolyGenerator
 
 # снаряды
 class Projectile(pygame.sprite.Sprite):
@@ -147,16 +148,13 @@ class Player(object):
         self.loaded_png = pygame.image.load(self.png)
         self.scaled_png = pygame.transform.scale(self.loaded_png, (w, h))
 
-    def move(self, x, y):
-        self.x += x
-        self.y += y
-
+    # angle from player to mouse
+    def target_angle(self, mouse: tuple):
+        dst_x, dst_y = mouse
+        degrees = math.degrees(math.atan2(self.y - dst_y, self.x - dst_x))
+        if degrees < 0:
+            degrees += 360
+        return round(degrees, 3)
 
     def upd(self, screen):
         screen.blit(self.scaled_png, (self.x, self.y))
-        # print(f'player {self.x = }, {self.y = }')
-
-        # if not self.standing:
-        #     screen.blit(walkRight[0], (self.x, self.y))
-        # else:
-        #     screen.blit(walkLeft[0], (self.x, self.y))
