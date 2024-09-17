@@ -289,17 +289,17 @@ while run and health:
 
     # rockets - only one rocket can be present at a time
     if rocket_fire and not any(filter(lambda b: b.spec == 'rocket', projectiles)):
-        rocket = Projectile(x, y, dmg=180, png=rocket_png, vel=15, scale=0.05, spec='rocket', angle=-angle+90)
+        rocket = Projectile(x, y, dmg=180, png=rocket_png, vel=15, scale=0.05, spec='rocket', rotate=angle, angle=angle)
         projectiles.append(rocket)
 
     # render projectiles
     for proj in projectiles:
-        # out of screen
-        if proj.y < 0:
+        # moved out of screen
+        if proj.out_of_screen():
             projectiles.remove(proj)
             continue
 
-        # debris - out of lifetime
+        # shrapnel - out of lifetime
         if hasattr(proj, 'duration'):
             proj.duration -= 1
             if not proj.duration:

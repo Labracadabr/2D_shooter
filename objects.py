@@ -53,6 +53,15 @@ class Projectile(pygame.sprite.Sprite):
         self.vel /= 1.5
         self.dmg /= 1.5
 
+    def out_of_screen(self) -> bool:
+        # celling & bottom
+        if self.y >= SCREEN_SIZE[1] or self.y < 0:
+            return True
+        # left & right side
+        if self.x >= SCREEN_SIZE[0] or self.x < 0:
+            return True
+        return False
+
 
 # осколки
 class Shrapnel(Projectile):
